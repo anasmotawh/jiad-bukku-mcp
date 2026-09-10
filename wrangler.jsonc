@@ -1,0 +1,35 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "jiad-bukku-mcp",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-11",
+  "compatibility_flags": ["nodejs_compat"],
+  "routes": [
+    {
+      "pattern": "bukku.jusniiljas.com",
+      "custom_domain": true
+    }
+  ],
+  "containers": [
+    {
+      "class_name": "BukkuMcpContainer",
+      "image": "./Dockerfile",
+      "instance_type": "lite",
+      "max_instances": 1
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "BUKKU_MCP_CONTAINER",
+        "class_name": "BukkuMcpContainer"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["BukkuMcpContainer"]
+    }
+  ]
+}
