@@ -7,6 +7,12 @@
   "alias": {
     "core": "./vendor/bukku/packages/core/src/index.ts"
   },
+  "migrations": [
+    {
+      "tag": "v2-remove-container",
+      "deleted_classes": ["BukkuMcpContainer"]
+    }
+  ],
   "routes": [
     {
       "pattern": "bukku.jusniiljas.com",
