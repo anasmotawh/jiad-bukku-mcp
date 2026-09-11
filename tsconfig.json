@@ -11,5 +11,13 @@
       "core": ["vendor/bukku/packages/core/src/index.ts"]
     }
   },
-  "include": ["src/**/*.ts", "vendor/bukku/packages/core/src/**/*.ts", "vendor/bukku/packages/mcp/src/**/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "vendor/bukku/packages/core/src/**/*.ts",
+    "vendor/bukku/packages/mcp/src/tools/**/*.ts"
+  ],
+  "exclude": [
+    "**/*.test.ts",
+    "vendor/bukku/packages/mcp/src/config/**"
+  ]
 }
