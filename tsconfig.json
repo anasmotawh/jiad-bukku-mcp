@@ -5,7 +5,11 @@
     "moduleResolution": "Bundler",
     "strict": true,
     "types": ["@cloudflare/workers-types"],
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "core": ["vendor/bukku/packages/core/src/index.ts"]
+    }
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "vendor/bukku/packages/core/src/**/*.ts", "vendor/bukku/packages/mcp/src/**/*.ts"]
 }
