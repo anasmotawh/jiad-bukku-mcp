@@ -36,6 +36,18 @@ The Worker expects three Cloudflare secrets:
 
 No secret values belong in GitHub. `/mcp` requires `Authorization: Bearer <MCP_AUTH_TOKEN>`.
 
+`BUKKU_COMPANY_SUBDOMAIN` must contain the company slug (for example, `jiad`). A matching HTTPS Bukku login URL is also accepted and normalized. Malformed configuration returns an authenticated HTTP 503 instead of sending an invalid company header to Bukku.
+
+## Verify or rotate MCP authentication on Windows
+
+With PowerShell 7 and Node.js 24, run `./scripts/mcp-token.ps1 -Rotate` to generate a cryptographic token, save it using Windows user-bound encryption, upload it through stdin, and verify that same value. The encrypted `.mcp-token.dpapi` file is ignored by Git and can only be decrypted by the same Windows user.
+
+Run `./scripts/mcp-token.ps1` to verify again, or `./scripts/mcp-token.ps1 -Copy` to copy the token for your MCP client's Bearer authentication field without printing it. Rotation requires updating clients that used the previous token.
+
+Secret uploads can briefly continue serving the previous value. Verification retries initialization on HTTP 401 for up to 55 seconds; do not repeatedly rotate while propagation is pending. It checks public health, rejection of missing/incorrect credentials, MCP initialization, ping, all tool pages, and read-only currency/contact calls. Accounting records and tokens are not printed. A persistent failure exits unsuccessfully.
+
+Run `npm test` and `npm run typecheck` before deploying code changes.
+
 ## First-time setup
 
 If you already cloned this repository before the Worker-only conversion, update it with:

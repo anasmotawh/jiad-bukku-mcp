@@ -1,12 +1,14 @@
 {
   "name": "jiad-bukku-mcp",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --test scripts/config.test.mjs",
+    "verify:mcp": "node scripts/verify-mcp.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.30.0",

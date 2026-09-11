@@ -1,6 +1,7 @@
 import { createLegacyMcpHandler } from "agents/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { BukkuClient } from "core";
+import { companySubdomain } from "./config.js";
 import { registerAllTools } from "../vendor/bukku/packages/mcp/src/tools/registry.js";
 
 interface Env {
@@ -28,7 +29,7 @@ function isAuthorized(request: Request, secret: string): boolean {
 function createServer(env: Env): McpServer {
   const client = new BukkuClient({
     apiToken: env.BUKKU_API_TOKEN,
-    companySubdomain: env.BUKKU_COMPANY_SUBDOMAIN,
+    companySubdomain: companySubdomain(env.BUKKU_COMPANY_SUBDOMAIN),
   });
 
   const server = new McpServer({
@@ -64,7 +65,15 @@ export default {
       return unauthorized();
     }
 
-    const server = createServer(env);
+    let server: McpServer;
+    try {
+      server = createServer(env);
+    } catch {
+      return Response.json({ error: 'Bukku server configuration is invalid. Check the company subdomain and API token bindings.' }, {
+        status: 503,
+        headers: { 'Cache-Control': 'no-store' },
+      });
+    }
     return createLegacyMcpHandler(server, {
       route: "/mcp",
       enableJsonResponse: true,

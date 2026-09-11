@@ -7,12 +7,6 @@
   "alias": {
     "core": "./vendor/bukku/packages/core/src/index.ts"
   },
-  "exports": {
-    "BukkuMcpContainer": {
-      "type": "durable-object",
-      "state": "deleted"
-    }
-  },
   "routes": [
     {
       "pattern": "bukku.jusniiljas.com",
