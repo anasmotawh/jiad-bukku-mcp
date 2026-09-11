@@ -2,11 +2,11 @@
 
 Production remote MCP bridge for Jusni Iljas Al Djabbar Sdn Bhd.
 
-This project runs the existing `@centry-digital/bukku-mcp` package inside a Cloudflare Container and exposes it through a Cloudflare Worker at:
+This version runs directly on Cloudflare Workers and does **not** use Cloudflare Containers or Docker. It is intended to fit the Cloudflare Workers Free plan for normal JIAD usage.
+
+Production endpoint:
 
 `https://bukku.jusniiljas.com/mcp`
-
-The design preserves the upstream Bukku MCP toolset while removing the dependency on a Windows PC or local Cloudflare Tunnel.
 
 ## Architecture
 
@@ -15,47 +15,52 @@ ChatGPT
    |
    | HTTPS + Bearer token
    v
-bukku.jusniiljas.com
+bukku.jusniiljas.com/mcp
    |
    v
 Cloudflare Worker
-   |
-   | private Container binding
-   v
-Cloudflare Container
-   |
-   | supergateway: Streamable HTTP <-> stdio
-   v
-@centry-digital/bukku-mcp
    |
    v
 Bukku API
 ```
 
-## Security model
+The upstream Bukku source is pinned as a Git submodule under `vendor/bukku` so the existing tool registry can be reused while replacing the local stdio transport with Cloudflare's HTTP MCP handler.
 
-- `BUKKU_API_TOKEN` is stored only as a Cloudflare Worker secret and is passed to the private container at runtime.
-- `BUKKU_COMPANY_SUBDOMAIN` is stored as a Cloudflare Worker secret.
-- `MCP_AUTH_TOKEN` protects the public `/mcp` endpoint with Bearer authentication.
-- No credentials are committed to GitHub.
-- The Worker strips the external Authorization header before forwarding traffic to the container.
-- The public `/health` endpoint contains no accounting data or secrets.
+## Security
 
-## Requirements
+The Worker expects three Cloudflare secrets:
 
-- Cloudflare Workers Paid plan with Containers enabled.
-- `jusniiljas.com` must be an active Cloudflare zone in the same account used for deployment.
-- Docker Desktop must be running for the initial `wrangler deploy` because Wrangler builds and pushes the container image.
-- Node.js 20+.
+- `BUKKU_API_TOKEN`
+- `BUKKU_COMPANY_SUBDOMAIN`
+- `MCP_AUTH_TOKEN`
 
-## Initial deployment
+No secret values belong in GitHub. `/mcp` requires `Authorization: Bearer <MCP_AUTH_TOKEN>`.
+
+## First-time setup
+
+If you already cloned this repository before the Worker-only conversion, update it with:
 
 ```bash
+git pull
+git submodule update --init --recursive
 npm install
+```
+
+If cloning fresh:
+
+```bash
+git clone --recurse-submodules https://github.com/anasmotawh/jiad-bukku-mcp.git
+cd jiad-bukku-mcp
+npm install
+```
+
+Authenticate Wrangler if needed:
+
+```bash
 npx wrangler login
 ```
 
-Set the three production secrets. Wrangler will prompt for each value; do not place secret values directly in the command line or repository.
+Set secrets if they are not already present:
 
 ```bash
 npx wrangler secret put BUKKU_API_TOKEN
@@ -69,48 +74,19 @@ Deploy:
 npm run deploy
 ```
 
-Wrangler will build the Docker image, upload the Worker and Container, and attach the Worker to the `bukku.jusniiljas.com` custom domain.
+Docker Desktop is not required for this version.
 
 ## Endpoints
 
-- `GET /health` - lightweight Worker health check. No authentication required.
-- `/mcp` - MCP Streamable HTTP endpoint. Requires `Authorization: Bearer <MCP_AUTH_TOKEN>`.
+- `GET /health` - Worker health check, no accounting data.
+- `/mcp` - authenticated MCP endpoint.
 
-All other routes return `404`.
+## Upstream compatibility
 
-## ChatGPT connector
+The project currently reuses the upstream SDK v1 Bukku MCP server definitions through Cloudflare's `createLegacyMcpHandler` bridge. The upstream Bukku repository is pinned to commit `94c1a5c1668f451ef9b067b4d9d1fa73162a9401`.
 
-Configure the remote MCP URL as:
+Most Bukku tools are ordinary HTTP API operations and are suitable for Workers. The upstream file-upload tool still assumes a local filesystem path; that specific tool is not expected to work correctly in the Worker runtime until it is redesigned to accept uploaded bytes rather than a machine-local path.
 
-```text
-https://bukku.jusniiljas.com/mcp
-```
+## Cloudflare Free plan note
 
-Use Bearer-token authentication with the same value stored in the Cloudflare `MCP_AUTH_TOKEN` secret.
-
-## Local development
-
-Create a local `.dev.vars` file containing:
-
-```text
-BUKKU_API_TOKEN=...
-BUKKU_COMPANY_SUBDOMAIN=...
-MCP_AUTH_TOKEN=...
-```
-
-`.dev.vars` is ignored by Git and must never be committed.
-
-Run:
-
-```bash
-npm run dev
-```
-
-Container development requires Docker.
-
-## Upstream packages
-
-- `@centry-digital/bukku-mcp` 2.0.3
-- `supergateway` 3.4.3
-
-The upstream Bukku MCP package is MIT licensed. This repository does not copy Bukku credentials or JIAD accounting data.
+This project no longer declares Containers or Durable Objects. Cloudflare Workers Free limits still apply, particularly CPU time and daily request limits. If the full upstream tool registry proves too CPU-heavy during initialization, the next optimization is to split or lazily register tool groups rather than moving back to paid Containers.
