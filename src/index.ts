@@ -33,7 +33,7 @@ function createServer(env: Env): McpServer {
 
   const server = new McpServer({
     name: "jiad-bukku",
-    version: "1.1.0",
+    version: "1.1.1",
   });
 
   registerAllTools(server, client);
@@ -64,14 +64,10 @@ export default {
       return unauthorized();
     }
 
-    // The upstream Bukku project currently uses MCP SDK v1. Cloudflare's
-    // legacy handler provides Streamable HTTP compatibility without a
-    // Container or Durable Object. A fresh server is created per request.
     const server = createServer(env);
     return createLegacyMcpHandler(server, {
       route: "/mcp",
       enableJsonResponse: true,
-      corsOptions: false,
     })(request, env, ctx);
   },
 } satisfies ExportedHandler<Env>;
