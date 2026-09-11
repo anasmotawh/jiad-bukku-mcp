@@ -1,0 +1,4 @@
+[submodule "vendor/bukku"]
+	path = vendor/bukku
+	url = https://github.com/centry-digital/bukku.git
+	branch = main
