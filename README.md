@@ -93,6 +93,27 @@ Docker Desktop is not required for this version.
 - `GET /health` - Worker health check, no accounting data.
 - `/mcp` - authenticated MCP endpoint.
 
+## File uploads
+
+The production Worker overrides the upstream disk-based multipart helper so `upload-file` works in a remote runtime.
+
+The existing MCP tool name and input field remain compatible:
+
+```json
+{
+  "file_path": "https://files.example.com/receipt.pdf"
+}
+```
+
+Despite the legacy `file_path` field name, production accepts:
+
+- an HTTPS URL to the file, including short-lived signed URLs; or
+- a `data:` URL containing the file bytes.
+
+Machine-local paths such as `/mnt/data/receipt.pdf` cannot work across the remote MCP boundary and are rejected with a clear error. Remote URLs are restricted to HTTPS, private/local network destinations are blocked, redirects are limited, and uploads are capped at 10 MB before forwarding to Bukku as multipart/form-data.
+
+A second optional Worker secret, `COMPOSIO_MCP_AUTH_TOKEN`, can authorize an integration layer such as Composio without replacing the existing `MCP_AUTH_TOKEN`. If unset, current authentication behavior is unchanged.
+
 ## Upstream compatibility
 
 The project currently reuses the upstream SDK v1 Bukku MCP server definitions through Cloudflare's `createLegacyMcpHandler` bridge. The upstream Bukku repository is pinned to commit `94c1a5c1668f451ef9b067b4d9d1fa73162a9401`.
